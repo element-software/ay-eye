@@ -1,7 +1,13 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
 import { z } from "zod";
+
+const sourceFile = fileURLToPath(import.meta.url);
+export const serverRoot = dirname(dirname(dirname(sourceFile)));
+export const repoRoot = resolve(serverRoot, "../..");
+dotenv.config({ path: resolve(repoRoot, ".env") });
 
 const envSchema = z.object({
   NODE_ENV: z.string().default("development"),
@@ -19,8 +25,6 @@ const envSchema = z.object({
 export const appConfig = envSchema.parse(process.env);
 
 export const appVersion = "0.1.0";
-
-export const serverRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 
 const secretPaths = {
   openai: "/run/secrets/openai_admin_key",
