@@ -1,0 +1,19 @@
+{
+  "name": "ai-usage-meter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @ai-usage-meter/shared && npm run build -w @ai-usage-meter/server && npm run build -w @ai-usage-meter/web",
+    "dev:server": "npm run dev -w @ai-usage-meter/server",
+    "dev:web": "npm run dev -w @ai-usage-meter/web",
+    "typecheck": "npm run build -w @ai-usage-meter/shared && npm run typecheck -w @ai-usage-meter/server && npm run typecheck -w @ai-usage-meter/web"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
