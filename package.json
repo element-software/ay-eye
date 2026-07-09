@@ -11,6 +11,8 @@
     "build": "npm run build -w @ai-usage-meter/shared && npm run build -w @ai-usage-meter/server && npm run build -w @ai-usage-meter/web",
     "dev:server": "npm run dev -w @ai-usage-meter/server",
     "dev:web": "npm run dev -w @ai-usage-meter/web",
+    "limits:install-codex-hook": "node scripts/install-codex-limit-hook.mjs",
+    "limits:sample": "scripts/push-codex-limits.sh --sample",
     "typecheck": "npm run build -w @ai-usage-meter/shared && npm run typecheck -w @ai-usage-meter/server && npm run typecheck -w @ai-usage-meter/web"
   },
   "engines": {

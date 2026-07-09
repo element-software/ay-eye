@@ -144,6 +144,12 @@ footer {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.limit-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .provider-grid--compact {
   margin-top: 14px;
 }
@@ -153,6 +159,89 @@ footer {
   flex-direction: column;
   gap: 12px;
   padding: 16px;
+}
+
+.limit-card {
+  background: rgba(17, 24, 32, 0.92);
+  border: 1px solid #26323d;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 220px;
+  padding: 16px;
+}
+
+.limit-card svg {
+  color: #5eead4;
+}
+
+.limit-card strong {
+  font-size: 26px;
+  line-height: 1.2;
+}
+
+.limit-bar {
+  background: #0a0f14;
+  border: 1px solid #26323d;
+  border-radius: 999px;
+  height: 12px;
+  overflow: hidden;
+}
+
+.limit-bar span {
+  background: linear-gradient(90deg, #5eead4, #f8c46c);
+  display: block;
+  height: 100%;
+}
+
+.limit-card dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.limit-card dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.limit-card dt,
+.limit-card dd {
+  color: #8a9aaa;
+  font-size: 13px;
+  margin: 0;
+}
+
+.limit-card dd {
+  color: #c7d2df;
+  text-align: right;
+}
+
+.empty-panel {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.setup-panel {
+  grid-column: 1 / -1;
+}
+
+.setup-panel ol {
+  color: #c7d2df;
+  margin: 4px 0 0;
+  padding-left: 22px;
+}
+
+.setup-panel li {
+  margin: 8px 0;
+}
+
+.setup-panel li code {
+  display: inline-block;
 }
 
 .provider-card__header,
@@ -282,6 +371,7 @@ footer {
 @media (max-width: 940px) {
   .metric-grid,
   .provider-grid,
+  .limit-grid,
   .device-layout {
     grid-template-columns: 1fr 1fr;
   }
@@ -299,6 +389,7 @@ footer {
 
   .metric-grid,
   .provider-grid,
+  .limit-grid,
   .device-layout {
     grid-template-columns: 1fr;
   }

@@ -1,0 +1,16 @@
+{
+  "provider": "codex",
+  "source": "manual-local-file",
+  "capturedAt": "2026-07-08T23:00:00Z",
+  "windows": [
+    {
+      "window": "5h",
+      "usedPercent": 41,
+      "resetAt": "2026-07-09T02:00:00Z"
+    },
+    {
+      "window": "7d",
+      "usedPercent": 18
+    }
+  ]
+}

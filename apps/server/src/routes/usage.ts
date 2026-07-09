@@ -3,6 +3,7 @@ import { adapters } from "../adapters/index.js";
 import {
   getModels,
   getProviderUsageToday,
+  getLatestLimitSnapshots,
   getSummaryTotals,
   getTimeseries,
   listProviderConnections
@@ -69,7 +70,8 @@ export async function usageRoutes(app: FastifyInstance): Promise<void> {
           cost: usage?.cost ?? null,
           status: connection?.status ?? (adapter.isConfigured() ? "configured" : "not_configured")
         };
-      })
+      }),
+      limits: getLatestLimitSnapshots()
     };
   });
 }

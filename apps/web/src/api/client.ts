@@ -42,6 +42,17 @@ export type ModelUsage = {
   currency: string;
 };
 
+export type LimitSnapshot = {
+  provider: string;
+  source: string;
+  capturedAt: string;
+  window: string;
+  usedPercent: number | null;
+  remainingPercent: number | null;
+  resetAt: string | null;
+  rawJson: string | null;
+};
+
 export async function apiGet<T>(path: string): Promise<T> {
   const response = await fetch(path);
   if (!response.ok) {

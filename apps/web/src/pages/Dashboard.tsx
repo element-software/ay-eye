@@ -1,11 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Cpu, Database, DollarSign, Download, KeyRound, RadioTower, RefreshCcw, Send } from "lucide-react";
-import { apiGet, apiPost, type ModelUsage, type Provider, type Summary, type TimeseriesPoint } from "../api/client";
+import { Cpu, Database, DollarSign, Download, Gauge, KeyRound, RadioTower, RefreshCcw, Send } from "lucide-react";
+import {
+  apiGet,
+  apiPost,
+  type LimitSnapshot,
+  type ModelUsage,
+  type Provider,
+  type Summary,
+  type TimeseriesPoint
+} from "../api/client";
 import { MetricCard } from "../components/MetricCard";
 import { ProviderCard } from "../components/ProviderCard";
 import { UsageChart } from "../components/UsageChart";
 
-type Tab = "overview" | "providers" | "models" | "device";
+type Tab = "overview" | "providers" | "models" | "limits" | "device";
 
 const emptySummary: Summary = {
   today: { requests: 0, inputTokens: 0, outputTokens: 0, cachedTokens: 0, cost: 0, currency: "USD" },
@@ -18,22 +26,25 @@ export function Dashboard(): JSX.Element {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [timeseries, setTimeseries] = useState<TimeseriesPoint[]>([]);
   const [models, setModels] = useState<ModelUsage[]>([]);
+  const [limits, setLimits] = useState<LimitSnapshot[]>([]);
   const [deviceJson, setDeviceJson] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    const [nextSummary, nextProviders, nextTimeseries, nextModels, nextDevice] = await Promise.all([
+    const [nextSummary, nextProviders, nextTimeseries, nextModels, nextLimits, nextDevice] = await Promise.all([
       apiGet<Summary>("/api/usage/summary"),
       apiGet<Provider[]>("/api/providers"),
       apiGet<TimeseriesPoint[]>("/api/usage/timeseries"),
       apiGet<ModelUsage[]>("/api/usage/models"),
+      apiGet<LimitSnapshot[]>("/api/limits/latest"),
       apiGet<unknown>("/api/devices/cyd/status")
     ]);
     setSummary(nextSummary);
     setProviders(nextProviders);
     setTimeseries(nextTimeseries);
     setModels(nextModels);
+    setLimits(nextLimits);
     setDeviceJson(nextDevice);
   }, []);
 
@@ -74,7 +85,7 @@ export function Dashboard(): JSX.Element {
       </header>
 
       <nav className="tabs" aria-label="Dashboard sections">
-        {(["overview", "providers", "models", "device"] as Tab[]).map((item) => (
+        {(["overview", "providers", "models", "limits", "device"] as Tab[]).map((item) => (
           <button key={item} className={tab === item ? "active" : ""} onClick={() => setTab(item)}>
             {item}
           </button>
@@ -159,6 +170,29 @@ export function Dashboard(): JSX.Element {
         </section>
       ) : null}
 
+      {tab === "limits" ? (
+        <section className="limit-grid">
+          {limits.length > 0 ? (
+            limits.map((limit) => <LimitCard key={`${limit.provider}-${limit.window}`} limit={limit} />)
+          ) : (
+            <article className="panel empty-panel setup-panel">
+              <Gauge />
+              <h2>Set up local limit snapshots</h2>
+              <p className="muted">Install the Codex Stop hook once, then edit the local JSON snapshot whenever limits change.</p>
+              <ol>
+                <li>
+                  <code>npm run limits:install-codex-hook</code>
+                </li>
+                <li>
+                  <code>npm run limits:sample</code>
+                </li>
+                <li>Open Codex, run <code>/hooks</code>, and trust the new Stop hook.</li>
+              </ol>
+            </article>
+          )}
+        </section>
+      ) : null}
+
       {tab === "device" ? (
         <section className="device-layout">
           <article className="panel">
@@ -195,10 +229,53 @@ interval:
   );
 }
 
+function LimitCard({ limit }: { limit: LimitSnapshot }): JSX.Element {
+  const usedPercent =
+    limit.usedPercent ?? (limit.remainingPercent === null ? null : Math.max(0, 100 - Number(limit.remainingPercent)));
+  const normalized = Math.max(0, Math.min(100, Number(usedPercent ?? 0)));
+
+  return (
+    <article className="limit-card">
+      <div className="section-heading">
+        <div>
+          <h3>{formatProvider(limit.provider)}</h3>
+          <p className="muted">{limit.window} window</p>
+        </div>
+        <Gauge />
+      </div>
+      <strong>{usedPercent === null ? "Unknown" : `${Math.round(normalized)}% used`}</strong>
+      <div className="limit-bar" aria-label={`${formatProvider(limit.provider)} ${limit.window} usage`}>
+        <span style={{ width: `${normalized}%` }} />
+      </div>
+      <dl>
+        <div>
+          <dt>Source</dt>
+          <dd>{limit.source}</dd>
+        </div>
+        <div>
+          <dt>Captured</dt>
+          <dd>{new Date(limit.capturedAt).toLocaleString()}</dd>
+        </div>
+        <div>
+          <dt>Reset</dt>
+          <dd>{limit.resetAt ? new Date(limit.resetAt).toLocaleString() : "unknown"}</dd>
+        </div>
+      </dl>
+    </article>
+  );
+}
+
 function formatNumber(value: number): string {
   return new Intl.NumberFormat().format(value);
 }
 
 function formatCurrency(value: number, currency: string): string {
   return new Intl.NumberFormat(undefined, { style: "currency", currency: currency || "USD" }).format(value);
+}
+
+function formatProvider(value: string): string {
+  return value
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }

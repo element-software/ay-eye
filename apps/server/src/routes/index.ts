@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { healthRoutes } from "./health.js";
+import { limitRoutes } from "./limits.js";
 import { providerRoutes } from "./providers.js";
 import { syncRoutes } from "./sync.js";
 import { usageRoutes } from "./usage.js";
@@ -9,4 +10,5 @@ export async function registerApiRoutes(app: FastifyInstance): Promise<void> {
   await providerRoutes(app);
   await syncRoutes(app);
   await usageRoutes(app);
+  await limitRoutes(app);
 }

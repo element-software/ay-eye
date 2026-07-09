@@ -25,6 +25,17 @@ export type SummaryTotals = {
   currency: string;
 };
 
+export type LimitSnapshotInput = {
+  provider: string;
+  source?: string;
+  capturedAt?: string;
+  window: string;
+  usedPercent?: number | null;
+  remainingPercent?: number | null;
+  resetAt?: string | null;
+  rawJson?: unknown;
+};
+
 const databasePath = getDatabasePath();
 mkdirSync(dirname(databasePath), { recursive: true });
 
@@ -78,8 +89,22 @@ export function migrate(): void {
       records_upserted INTEGER NOT NULL DEFAULT 0
     );
 
+    CREATE TABLE IF NOT EXISTS limit_snapshots (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      provider TEXT NOT NULL,
+      source TEXT NOT NULL,
+      captured_at TEXT NOT NULL,
+      window TEXT NOT NULL,
+      used_percent REAL,
+      remaining_percent REAL,
+      reset_at TEXT,
+      raw_json TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE INDEX IF NOT EXISTS idx_usage_buckets_provider_start ON usage_buckets(provider, bucket_start);
     CREATE INDEX IF NOT EXISTS idx_usage_buckets_model ON usage_buckets(model);
+    CREATE INDEX IF NOT EXISTS idx_limit_snapshots_provider_window ON limit_snapshots(provider, window, captured_at);
   `);
 }
 
@@ -299,6 +324,63 @@ export function getProviderUsageToday(start: Date, end: Date): unknown[] {
     `
     )
     .all(start.toISOString(), end.toISOString());
+}
+
+export function insertLimitSnapshots(snapshots: LimitSnapshotInput[]): number {
+  const statement = db.prepare(`
+    INSERT INTO limit_snapshots (
+      provider, source, captured_at, window, used_percent, remaining_percent, reset_at, raw_json
+    )
+    VALUES (
+      @provider, @source, @capturedAt, @window, @usedPercent, @remainingPercent, @resetAt, @rawJson
+    )
+  `);
+
+  const transaction = db.transaction((items: LimitSnapshotInput[]) => {
+    for (const snapshot of items) {
+      statement.run({
+        provider: snapshot.provider,
+        source: snapshot.source ?? "local",
+        capturedAt: snapshot.capturedAt ?? new Date().toISOString(),
+        window: snapshot.window,
+        usedPercent: snapshot.usedPercent ?? null,
+        remainingPercent: snapshot.remainingPercent ?? null,
+        resetAt: snapshot.resetAt ?? null,
+        rawJson: snapshot.rawJson ? JSON.stringify(snapshot.rawJson) : null
+      });
+    }
+  });
+
+  transaction(snapshots);
+  return snapshots.length;
+}
+
+export function getLatestLimitSnapshots(): unknown[] {
+  return db
+    .prepare(
+      `
+      SELECT
+        current.provider,
+        current.source,
+        current.captured_at AS capturedAt,
+        current.window,
+        current.used_percent AS usedPercent,
+        current.remaining_percent AS remainingPercent,
+        current.reset_at AS resetAt,
+        current.raw_json AS rawJson
+      FROM limit_snapshots current
+      INNER JOIN (
+        SELECT provider, window, MAX(captured_at) AS captured_at
+        FROM limit_snapshots
+        GROUP BY provider, window
+      ) latest
+        ON current.provider = latest.provider
+       AND current.window = latest.window
+       AND current.captured_at = latest.captured_at
+      ORDER BY current.provider, current.window
+    `
+    )
+    .all();
 }
 
 function mapConnection(row: Record<string, unknown>): ProviderConnection {

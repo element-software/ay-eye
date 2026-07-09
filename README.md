@@ -132,6 +132,62 @@ interval:
 
 This endpoint is intended for local LAN use. Do not expose it directly to the public internet.
 
+## Codex Limit Snapshots
+
+Codex and Claude subscription limits are not the same as provider API usage. This app supports local snapshots for limits such as Codex `5h` and `7d` windows without scraping product dashboards.
+
+Install the local Codex hook:
+
+```bash
+npm run limits:install-codex-hook
+```
+
+The installer:
+
+- creates `.codex/limit-snapshots/codex.json` from the example file if it does not exist
+- merges a `Stop` hook into `~/.codex/hooks.json`
+- preserves any existing hooks
+
+Open Codex and run:
+
+```txt
+/hooks
+```
+
+Trust the new Stop hook if Codex asks for review. After each turn, Codex will run:
+
+```bash
+scripts/push-codex-limits.sh
+```
+
+The script posts `.codex/limit-snapshots/codex.json` to:
+
+```txt
+POST /api/limits/snapshot
+```
+
+Test the dashboard with sample data:
+
+```bash
+npm run limits:sample
+```
+
+Edit `.codex/limit-snapshots/codex.json` to update real values:
+
+```json
+{
+  "provider": "codex",
+  "source": "manual-local-file",
+  "capturedAt": "2026-07-08T23:00:00Z",
+  "windows": [
+    { "window": "5h", "usedPercent": 41 },
+    { "window": "7d", "usedPercent": 18 }
+  ]
+}
+```
+
+The hook automates pushing local data. It does not discover Codex remaining limits by itself unless a stable local command or state file is available.
+
 ## Development
 
 Install dependencies:
