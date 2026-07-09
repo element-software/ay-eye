@@ -20,21 +20,19 @@ mkdirSync(codexHome, { recursive: true });
 mkdirSync(snapshotDir, { recursive: true });
 
 if (!existsSync(snapshotPath)) {
-  const initialSnapshot = existsSync(examplePath)
-    ? readFileSync(examplePath, "utf8")
-    : JSON.stringify(
-        {
-          provider: "codex",
-          source: "manual-local-file",
-          capturedAt: new Date().toISOString(),
-          windows: [
-            { window: "5h", usedPercent: 0 },
-            { window: "7d", usedPercent: 0 }
-          ]
-        },
-        null,
-        2
-      );
+  const initialSnapshot = JSON.stringify(
+    {
+      provider: "codex",
+      source: "manual-local-file",
+      capturedAt: new Date().toISOString(),
+      windows: [
+        { window: "5h", usedPercent: 0 },
+        { window: "7d", usedPercent: 0 }
+      ]
+    },
+    null,
+    2
+  );
   writeFileSync(snapshotPath, initialSnapshot.endsWith("\n") ? initialSnapshot : `${initialSnapshot}\n`);
 }
 

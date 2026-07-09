@@ -52,6 +52,13 @@ export function Dashboard(): JSX.Element {
     refresh().catch((error) => setMessage(error instanceof Error ? error.message : String(error)));
   }, [refresh]);
 
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      refresh().catch((error) => setMessage(error instanceof Error ? error.message : String(error)));
+    }, 10_000);
+    return () => window.clearInterval(interval);
+  }, [refresh]);
+
   const lastSync = useMemo(() => {
     const dates = providers.map((provider) => provider.lastSyncAt).filter(Boolean) as string[];
     return dates.length ? new Date(dates.sort().at(-1)!).toLocaleString() : "never";

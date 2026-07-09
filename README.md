@@ -160,7 +160,7 @@ Trust the new Stop hook if Codex asks for review. After each turn, Codex will ru
 scripts/push-codex-limits.sh
 ```
 
-The script posts `.codex/limit-snapshots/codex.json` to:
+The script stamps `capturedAt` at push time and posts `.codex/limit-snapshots/codex.json` to:
 
 ```txt
 POST /api/limits/snapshot
@@ -186,7 +186,7 @@ Edit `.codex/limit-snapshots/codex.json` to update real values:
 }
 ```
 
-The hook automates pushing local data. It does not discover Codex remaining limits by itself unless a stable local command or state file is available.
+The hook automates pushing local data, and the dashboard polls for changes. It does not discover Codex remaining limits by itself unless a stable local command or state file is available.
 
 ## Development
 

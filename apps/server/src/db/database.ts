@@ -360,24 +360,25 @@ export function getLatestLimitSnapshots(): unknown[] {
     .prepare(
       `
       SELECT
-        current.provider,
-        current.source,
-        current.captured_at AS capturedAt,
-        current.window,
-        current.used_percent AS usedPercent,
-        current.remaining_percent AS remainingPercent,
-        current.reset_at AS resetAt,
-        current.raw_json AS rawJson
-      FROM limit_snapshots current
-      INNER JOIN (
-        SELECT provider, window, MAX(captured_at) AS captured_at
+        provider,
+        source,
+        captured_at AS capturedAt,
+        window,
+        used_percent AS usedPercent,
+        remaining_percent AS remainingPercent,
+        reset_at AS resetAt,
+        raw_json AS rawJson
+      FROM (
+        SELECT
+          *,
+          ROW_NUMBER() OVER (
+            PARTITION BY provider, window
+            ORDER BY captured_at DESC, id DESC
+          ) AS rank
         FROM limit_snapshots
-        GROUP BY provider, window
-      ) latest
-        ON current.provider = latest.provider
-       AND current.window = latest.window
-       AND current.captured_at = latest.captured_at
-      ORDER BY current.provider, current.window
+      )
+      WHERE rank = 1
+      ORDER BY provider, window
     `
     )
     .all();

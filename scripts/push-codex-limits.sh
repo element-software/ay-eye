@@ -21,7 +21,14 @@ if [[ "$mode" == "--sample" ]]; then
 }
 JSON
 elif [[ -f "$state_file" ]]; then
-  payload="$state_file"
+  payload="$(mktemp)"
+  node - "$state_file" >"$payload" <<'NODE'
+const fs = require("node:fs");
+const path = process.argv[2];
+const snapshot = JSON.parse(fs.readFileSync(path, "utf8"));
+snapshot.capturedAt = new Date().toISOString();
+process.stdout.write(`${JSON.stringify(snapshot, null, 2)}\n`);
+NODE
 else
   exit 0
 fi
@@ -30,6 +37,6 @@ curl -fsS -X POST "$endpoint" \
   -H "Content-Type: application/json" \
   --data @"$payload" >/dev/null
 
-if [[ "$mode" == "--sample" ]]; then
+if [[ "$mode" == "--sample" || -f "${payload:-}" && "$payload" != "$state_file" ]]; then
   rm -f "$payload"
 fi
